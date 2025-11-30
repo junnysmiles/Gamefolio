@@ -3,6 +3,7 @@ import dbConnect from '../../lib/mongo/dbConnect';
 
 // --- Data Model (models/Game.js) ---
 
+// Define the Schema using the details you provided
 const GameSchema = new mongoose.Schema({
   game_name: {
     type: String,
@@ -55,38 +56,51 @@ const GameSchema = new mongoose.Schema({
   },
 });
 
-// The check prevents redefining the model on hot reload in Next.js
 const Game = mongoose.models.Game || mongoose.model('Game', GameSchema);
 
-
-// --- API Route Handler (pages/api/games.js) ---
+// --- API Route Handler ---
 
 export default async function handler(req, res) {
-  // 1. Establish the database connection
   await dbConnect();
 
-  // 2. Handle the request method
+    // --- NEW DEBUG: Confirm the Database Name ---
+  const db = mongoose.connection;
+  console.log(`Mongoose is querying database: ${db.name}`);
+  // ------------------------------------------
+
   const { method } = req;
 
-  switch (method) {
-    case 'GET':
-      try {
-        // Fetch all documents from the 'games' collection
-        const games = await Game.find({});
-
-        // Respond with a 200 OK status and the data
-        res.status(200).json({ success: true, data: games });
-      } catch (error) {
-        // Log the error and send a 400 status
-        console.error("Error fetching games:", error);
-        res.status(400).json({ success: false, error: error.message });
-      }
-      break;
-
-    // You can add 'POST', 'PUT', 'DELETE' cases here for other operations
-    default:
+  if (method !== 'GET') {
       res.setHeader('Allow', ['GET']);
-      res.status(405).end(`Method ${method} Not Allowed`);
-      break;
+      return res.status(405).end(`Method ${method} Not Allowed`);
+  }
+
+  try {    
+    console.log(`Querying collection: ${Game.collection.name}`);
+
+    const games = await Game.find({});
+    const documentCount = await Game.countDocuments({});
+    
+    console.log(`Query successful. Documents found: ${documentCount}`);
+    
+       // Attempt 1: Standard Mongoose Query
+    const mongooseGames = await Game.find({});
+    console.log(`[DEBUG] Attempt 1 (Mongoose.find) Documents found: ${mongooseGames.length}`);
+
+    // Attempt 2: Native MongoDB Driver Query (less strict on schema)
+    const nativeGames = await Game.collection.find({}).toArray();
+    console.log(`[DEBUG] Attempt 2 (Native Driver) Documents found: ${nativeGames.length}`);
+    
+    if (games.length === 0) {
+        console.log("No documents returned. Collection might be empty.");
+    } else {
+        console.log(`Found ${games.length} documents.`);
+    }
+
+    res.status(200).json({ success: true, data: games });
+
+  } catch (error) {
+    console.error("Error fetching games:", error);
+    res.status(500).json({ success: false, error: 'Failed to fetch data from MongoDB.', details: error.message });
   }
 }
