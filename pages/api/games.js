@@ -63,7 +63,7 @@ const Game = mongoose.models.Game || mongoose.model('Game', GameSchema);
 export default async function handler(req, res) {
   await dbConnect();
 
-    // --- NEW DEBUG: Confirm the Database Name ---
+    // --- Confirm the Database Name ---
   const db = mongoose.connection;
   console.log(`Mongoose is querying database: ${db.name}`);
   // ------------------------------------------
@@ -82,14 +82,6 @@ export default async function handler(req, res) {
     const documentCount = await Game.countDocuments({});
     
     console.log(`Query successful. Documents found: ${documentCount}`);
-    
-       // Attempt 1: Standard Mongoose Query
-    const mongooseGames = await Game.find({});
-    console.log(`[DEBUG] Attempt 1 (Mongoose.find) Documents found: ${mongooseGames.length}`);
-
-    // Attempt 2: Native MongoDB Driver Query (less strict on schema)
-    const nativeGames = await Game.collection.find({}).toArray();
-    console.log(`[DEBUG] Attempt 2 (Native Driver) Documents found: ${nativeGames.length}`);
     
     if (games.length === 0) {
         console.log("No documents returned. Collection might be empty.");
