@@ -1,18 +1,11 @@
 import mongoose from 'mongoose';
-import dbConnect from '../../lib/mongo/dbConnect';
+import dbConnect from '../../../lib/mongo/dbConnect';
 
-// --- Data Model (models/Game.js) ---
-
-// Define the Schema using the details you provided
 const GameSchema = new mongoose.Schema({
   game_name: {
     type: String,
     required: [true, 'Please provide a name for this game.'],
     maxlength: [100, 'Game name cannot be more than 100 characters'],
-  },
-  review: {
-    type: String,
-    required: false,
   },
   last_played: {
     type: Date,
@@ -23,16 +16,6 @@ const GameSchema = new mongoose.Schema({
     required: false,
     min: 1,
     max: 5,
-  },
-  number_of_achievements: {
-    type: Number,
-    required: false,
-    min: 0,
-  },
-  number_achieved: {
-    type: Number,
-    required: false,
-    min: 0,
   },
   percentage_completed: {
     type: Number,
@@ -45,15 +28,11 @@ const GameSchema = new mongoose.Schema({
     required: false,
     min: 0,
   },
-  finished_game: {
-    type: String,
-    required: false,
-  },
-  isFinished: {
-    type: Boolean,
-    required: false,
-    default: false,
-  },
+  display_id: {
+    type: Number,
+    required: true,
+    unique: true,
+  }
 });
 
 const Game = mongoose.models.Game || mongoose.model('Game', GameSchema);
@@ -63,7 +42,7 @@ const Game = mongoose.models.Game || mongoose.model('Game', GameSchema);
 export default async function handler(req, res) {
   await dbConnect();
 
-    // --- Confirm the Database Name ---
+  // Confirm the Database Name ---
   const db = mongoose.connection;
   console.log(`Mongoose is querying database: ${db.name}`);
   // ------------------------------------------
@@ -78,7 +57,7 @@ export default async function handler(req, res) {
   try {    
     console.log(`Querying collection: ${Game.collection.name}`);
 
-    const games = await Game.find({});
+    const games = await Game.find({}).lean();
     const documentCount = await Game.countDocuments({});
     
     console.log(`Query successful. Documents found: ${documentCount}`);
