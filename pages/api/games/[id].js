@@ -51,7 +51,7 @@ const GameSchema = new mongoose.Schema({
     required: false,
     default: false,
   },
-  display_id: {
+  id: {
     type: Number,
     required: true,
     unique: true,
@@ -60,11 +60,13 @@ const GameSchema = new mongoose.Schema({
 
 // Check if the model already exists before creating it (Next.js requirement)
 const Game = mongoose.models.Game || mongoose.model('Game', GameSchema);
+GameSchema.set('id', false); 
+GameSchema.set('toJSON', { virtuals: false });
+GameSchema.set('toObject', { virtuals: false });
 
 // --- API Route Handler ---
 
-export default async function handler(req, res) {
-  // 1. Ensure connection is established
+export default async function getGameById(req, res) {
   await dbConnect();
   
   const { 
@@ -72,8 +74,9 @@ export default async function handler(req, res) {
     method,
   } = req;
 
-  // Extracts the ID from the query parameters, favoring 'id' (from [id].js)
-  const id = query.id || query._id; 
+  const id = query.id; 
+
+  console.log(query.id)
 
   if (method !== 'GET') {
       res.setHeader('Allow', ['GET']);
@@ -81,16 +84,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 2. CONVERSION and VALIDATION: Convert the string ID from the URL to an integer.
-    
-    // Check if the ID parameter was actually provided in the URL
-    if (!id) {
-       return res.status(400).json({ 
-        success: false, 
-        error: `Missing ID parameter. Please ensure a display ID is provided in the URL path.`
-      });
-    }
-
     const numericId = parseInt(id, 10);
     
     if (isNaN(numericId) || numericId < 1) {
@@ -100,9 +93,10 @@ export default async function handler(req, res) {
       });
     }
     
-    // 3. QUERY: Use findOne() to query by the specific 'display_id' field.
-    const game = await Game.findOne({ display_id: numericId }).lean();
+    const game = await Game.findOne({ id: numericId }).lean();
+    delete game._id;
 
+    console.log("Returned game:", game);
 
     if (!game) {
       // 404: Game not found in the database
@@ -112,13 +106,9 @@ export default async function handler(req, res) {
       });
     }
 
-    // 4. Success: return the single game document
-    // NOTE: Returning the game object directly (not wrapped in { success: true, data: game })
-    // as your frontend expects the raw JSON object.
     res.status(200).json(game); 
 
   } catch (error) {
-    // This catches general database connection or unexpected errors
     console.error(`[API ERROR] Error fetching game ID ${id}:`, error.message);
     res.status(500).json({ 
       success: false, 

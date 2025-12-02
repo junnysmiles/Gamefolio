@@ -51,10 +51,10 @@ export default async function CollectionTable({ isWishlist = false }) {
                         <TableBody>
                             {games.data.map((game) => (
                                 <TableRow
-                                    key={game._id}
+                                    key={game.id}
                                     sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                                 >
-                                    <TableCell component="th" scope="row">{game._id}</TableCell>
+                                    <TableCell component="th" scope="row">{game.id}</TableCell>
                                     <TableCell>{game.game_name}</TableCell>
                                     <TableCell>{game.last_played ? format(new Date(game.last_played), "MMMM d, yyyy @ h:mmaaa") : '—'}</TableCell>
                                     <TableCell>{game.hours_played}</TableCell>
@@ -87,7 +87,7 @@ export default async function CollectionTable({ isWishlist = false }) {
                                         <RatingBar initialRating={game.rating} isReadOnly={true} />
                                     </TableCell>
                                     <TableCell>
-                                        <Link href={`/collection/${game.display_id}`}>
+                                        <Link href={`/collection/${game.id}`}>
                                                 <IconButton edge="end" aria-label="edit">
                                                     <ReadMoreIcon />
                                                 </IconButton>

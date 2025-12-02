@@ -39,7 +39,7 @@ const Game = mongoose.models.Game || mongoose.model('Game', GameSchema);
 
 // --- API Route Handler ---
 
-export default async function handler(req, res) {
+export default async function getGames(req, res) {
   await dbConnect();
 
   // Confirm the Database Name ---
